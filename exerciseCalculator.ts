@@ -1,35 +1,41 @@
 interface ExerciseResult {
-	periodLength: number,
-    trainingDays: number,
-    success: boolean,
-    rating: number,
-    ratingDescription: string,
-    target: number,
-    average: number
+	periodLength?: number,
+    trainingDays?: number,
+    success?: boolean,
+    rating?: number,
+    ratingDescription?: string,
+    target?: number,
+    average?: number
 }
 
 interface ExerciseParameters {
-	periodLength: number,
-    trainingDays: number,
+	periodLength?: number,
+    trainingDays?: number,
+    error?: string
 }
 
-const parseExerciseArguments = (args: string[]): ExerciseParameters => {
+const parseExerciseArguments = (daily_exercises: number[], target: number): ExerciseParameters => {
 	let arg: string;
     let trainingDays: number = 0;
-    for(arg in args) {
-        if(!isNaN(Number(args[arg])) && Number(args[arg]) > 0) {
+    if(isNaN(target) || !Array.isArray(daily_exercises) || daily_exercises.length == 0) {
+        return { error: 'malformatted parameters' }
+    }
+    for(arg in daily_exercises) {
+        if(!isNaN(Number(daily_exercises[arg])) && Number(daily_exercises[arg]) > 0) {
             trainingDays = trainingDays + 1;
+        } else {
+            return { error: 'malformatted parameters' }
         }
     }
     return {
-        periodLength: args.length,
+        periodLength: daily_exercises.length,
         trainingDays: trainingDays
     }
 }
 
 
   
-const exerciseCalculator = (periodLength: number, trainingDays: number, target: number, hoursPerDay: string[]): ExerciseResult => {
+const exerciseCalculator = (exerciseParameters: ExerciseParameters, target: number, hoursPerDay: number[]): ExerciseResult => {
     const avg: number = hoursPerDay.reduce((a, b) => Number(a) + Number(b), 0) / hoursPerDay.length;
 	let rating: number;
     let ratingDescription: string;
@@ -44,8 +50,8 @@ const exerciseCalculator = (periodLength: number, trainingDays: number, target: 
         ratingDescription = 'Mala performance';
     }
     return {
-        periodLength: periodLength,
-        trainingDays: trainingDays,
+        periodLength: exerciseParameters.periodLength,
+        trainingDays: exerciseParameters.trainingDays,
         success: avg >= target,
         rating: rating,
         ratingDescription: ratingDescription,
@@ -54,15 +60,7 @@ const exerciseCalculator = (periodLength: number, trainingDays: number, target: 
     }
 }
   
-try {
-    if (process.argv.length < 2) throw new Error('Not enough arguments');
-	const { periodLength, trainingDays } = parseExerciseArguments([...process.argv.slice(3)]);
-	const result = exerciseCalculator(periodLength, trainingDays, Number(process.argv[2]), [...process.argv.slice(3)]);
-    console.log(result)
-} catch (error: unknown) {
-	let errorMessage = 'Something bad happened.'
-	if (error instanceof Error) {
-	  	errorMessage += ' Error: ' + error.message;
-	}
-	console.log(errorMessage);
+export const exerciseCalculatorModule = (daily_exercises: number[], target: number) : ExerciseResult => {
+    const exerciseParameters : ExerciseParameters = parseExerciseArguments(daily_exercises, target);
+    return exerciseParameters.error? exerciseParameters : exerciseCalculator(exerciseParameters, target, daily_exercises) ;   
 }

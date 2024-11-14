@@ -1,44 +1,32 @@
-
-  
-const parseArguments = (args: string[]): IMCParameters => {
-	if (args.length < 4) throw new Error('Not enough arguments');
-	if (args.length > 4) throw new Error('Too many arguments');
-  
-	if (!isNaN(Number(args[2])) && !isNaN(Number(args[3]))) {
-		return {
-			height: Number(args[2]),
-			weight: Number(args[3])
-		}
-	} else {
-	  	throw new Error('Provided values were not numbers!');
-	}
-}
-
 interface IMCParameters {
 	height: number;
 	weight: number;
 }
-  
-const imcCalculator = (height: number, weight: number): void => {
-	const imcIndex: number = weight / Math.pow(height, 2);
-	if (imcIndex < 18.50) {
-		console.log(`Peso bajo, Height: ${height}, Weight: ${weight}`);
-	} else if (imcIndex < 25) {
-		console.log(`Normal, Height: ${height}, Weight: ${weight}`)
-	} else if (imcIndex < 29.99) {
-		console.log(`Sobrepeso, Height: ${height}, Weight: ${weight}`)
-	} else {
-		console.log(`Obesidad, Height: ${height}, Weight: ${weight}`)
-	}
+
+interface IMCResponse {
+	weight?: number,
+	height?: number,
+	bmi?: string,
+	error?: string
 }
   
-try {
-	const { height, weight } = parseArguments(process.argv);
-	imcCalculator(height, weight);
-} catch (error: unknown) {
-	let errorMessage = 'Something bad happened.'
-	if (error instanceof Error) {
-	  	errorMessage += ' Error: ' + error.message;
+const imcCalculator = (imcParameters: IMCParameters): IMCResponse => {
+	const imcIndex: number = imcParameters.weight / Math.pow(imcParameters.height, 2);
+	if (imcIndex < 18.50) {
+		return { weight: imcParameters.weight, height: imcParameters.height, bmi: 'Underweight' };
+	} else if (imcIndex < 25) {
+		return { weight: imcParameters.weight, height: imcParameters.height, bmi: 'Normal Weight' };
+	} else if (imcIndex < 29.99) {
+		return { weight: imcParameters.weight, height: imcParameters.height, bmi: 'Overweight' };
+	} else {
+		return { weight: imcParameters.weight, height: imcParameters.height, bmi: 'Obesity' };
 	}
-	console.log(errorMessage);
+}
+
+export const bmiCalculatorModule = (imcParameters: IMCParameters) : IMCResponse => {
+	if (isNaN(imcParameters.height) || isNaN(imcParameters.weight)) {
+		return { error: 'malformatted parameters' }
+	} else {
+		return imcCalculator(imcParameters);
+	}
 }
